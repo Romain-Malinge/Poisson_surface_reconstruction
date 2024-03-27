@@ -1,109 +1,53 @@
 import numpy as np
-import os
-from sklearn.decomposition import PCA
-import numpy as np
-from matplotlib import cm
-
-def make_pca(data: np.ndarray, origin: np.ndarray, n_components: int):
-    """
-    Compute the PCA on the data provided
-    :param n_components: n_components for the PCA
-    :param data: Array containing data
-    :return: projection of data 
-    """
-    x = np.vstack((np.array(data), origin))
-    xc = x - origin
-    #xc = xc.to_numpy()
-    pca = PCA(n_components=n_components)
-    pca.fit(xc)
-    w = pca.components_
-    new_coord = xc @ np.transpose(w)
-    return new_coord
-
-def lstsq_quadrics_fitting(pos_xyz):
-    """
-    Fit a given set of 3D points (x, y, z) to a quadrics of equation ax^2 + by^2 + cxy + dx + ey + f = z
-    :param pos_xyz: A two-dimensional numpy array, containing the coordinates of the points
-    :return:
-    """
-    ## Quadric equation
-    A = np.ones((pos_xyz.shape[0], 6))
-    A[:, 0:2] = np.square(pos_xyz[:, 0:2], pos_xyz[:, 0:2])
-    A[:, 2] = np.multiply(pos_xyz[:, 0], pos_xyz[:, 1])
-    A[:, 3:5] = pos_xyz[:, 0:2]
-    ## Z-axis
-    Z = pos_xyz[:, 2]
-    ## coefficents of the quatrics equation
-    X, _, _, _ = np.linalg.lstsq(A, Z, rcond=None)
-    ## error
-    residuals = Z - A @ X
-    ## Erreur associée à l'origine est âr construction en dernière position
-    error_origin = residuals[-1]
-    return X, error_origin
+import plotly.graph_objects as go
 
 
-def generate_colormap(distances: np.ndarray, c_type: str):
-    """
-    Generates a colormap according to the values contained in distances
-    :param distances: a numpy.ndarray containing data from which create a colormap
-    :param c_type: the type of colormap, it's a matplotlib colormap type
-    :return:
-    """
-    colormap = []
-    q25 = np.percentile(distances, 25)
-    q75 = np.percentile(distances, 75)
-    iqr = q75-q25
+# Ajoute un cercle a une figure
+def add_circle(point, radius, angle, fig):
 
-    min_dist = np.min(distances)
-    max_dist = np.max(distances)
-    normed_dist = distances / (q75 + 1.5*iqr)
-    col = cm.get_cmap(c_type, 256)
-    if min_dist != max_dist:
-        for dist in normed_dist:
-            if dist < (q25-1.5*iqr)/(q75 + 1.5*iqr) or dist > 1:
-                #colormap.append([255, 0, 255])
-                colormap.append([1, 0, 1])
-            else:
-                #colormap.append([255 * i for i in col(float(dist))])
-                colormap.append([i for i in col(float(dist))])
-    else:
-        print("Error")
-        n = len(distances)
-        #colormap = n * [[0, 255, 0]]
-        colormap = n * [[0, 1, 0]]
-    return colormap
+    x_center = point[0]
+    y_center = point[1]
+    z_center = point[2]
 
-def generate_colormap2(distances: np.ndarray, c_type: str = 'jet'):
-    """
-    Generates a colormap according to the values contained in distances
-    :param distances: a numpy.ndarray containing data from which create a colormap
-    :param c_type: the type of colormap, it's a matplotlib colormap type
-    :return:
-    """
-    colormap = []
-    min_dist = np.min(distances)
-    max_dist = np.max(distances)
-    normed_dist = (distances - min_dist) / (max_dist - min_dist)
-    col = cm.get_cmap(c_type, 256)
-    if min_dist != max_dist:
-        for dist in normed_dist:
-            #colormap.append([255 * i for i in col(float(dist))])
-            colormap.append([i for i in col(float(dist))])
-    return colormap
+    theta_x = angle[0]
+    theta_y = angle[1]
+    theta_z = angle[2]
 
-def save(filename, obj_path, sommets, colormap):
-    with open(filename, 'w+') as f:
-        for i in range(sommets.shape[0]):
-            x,y,z = sommets[i,:]
-            color = colormap[i]
-            f.writelines(f"v {x} {y} {z} {color[0]} {color[1]} {color[2]}\n")
-
-        f_faces = open(obj_path, "r")
-        lines = f_faces.readlines()
-        for line in lines:
-            if line[0] == 'f': f.writelines(line) 
-        f_faces.close()
-        f.close()
+    theta = [i for i in range(0, 361, 20)]
+    x_circle = [x_center + radius * np.cos(np.deg2rad(angle)) for angle in theta]
+    y_circle = [y_center + radius * np.sin(np.deg2rad(angle)) for angle in theta]
+    z_circle = [z_center] * len(theta)
 
 
-print('Fin import utils_tp2_curvature')
+    x_rotated_circle = []
+    for i in range(len(theta)):
+        y_temp = (y_circle[i] - y_center) * np.cos(np.deg2rad(theta_x)) - (z_circle[i] - z_center) * np.sin(np.deg2rad(theta_x)) + y_center
+        z_temp = (y_circle[i] - y_center) * np.sin(np.deg2rad(theta_x)) + (z_circle[i] - z_center) * np.cos(np.deg2rad(theta_x)) + z_center
+        x_rotated_circle.append(x_circle[i])
+        y_circle[i] = y_temp
+        z_circle[i] = z_temp
+
+    # Rotation autour de l'axe y
+    y_rotated_circle = []
+    for i in range(len(theta)):
+        x_temp = (x_rotated_circle[i] - x_center) * np.cos(np.deg2rad(theta_y)) + (z_circle[i] - z_center) * np.sin(np.deg2rad(theta_y)) + x_center
+        z_temp = -(x_rotated_circle[i] - x_center) * np.sin(np.deg2rad(theta_y)) + (z_circle[i] - z_center) * np.cos(np.deg2rad(theta_y)) + z_center
+        y_rotated_circle.append(y_circle[i])
+        x_rotated_circle[i] = x_temp
+        z_circle[i] = z_temp
+
+    # Rotation autour de l'axe z
+    z_rotated_circle = []
+    for i in range(len(theta)):
+        x_temp = (x_rotated_circle[i] - x_center) * np.cos(np.deg2rad(theta_z)) - (y_rotated_circle[i] - y_center) * np.sin(np.deg2rad(theta_z)) + x_center
+        y_temp = (x_rotated_circle[i] - x_center) * np.sin(np.deg2rad(theta_z)) + (y_rotated_circle[i] - y_center) * np.cos(np.deg2rad(theta_z)) + y_center
+        z_rotated_circle.append(z_circle[i])
+        x_rotated_circle[i] = x_temp
+        y_rotated_circle[i] = y_temp
+
+    fig.add_trace(go.Scatter3d(
+        x=x_rotated_circle, y=y_rotated_circle, z=z_rotated_circle,
+        mode='lines',
+        line=dict(color='blue', width=2)
+    ))
+
