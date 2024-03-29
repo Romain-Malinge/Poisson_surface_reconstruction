@@ -1,17 +1,23 @@
 import numpy as np
+import math
 import plotly.graph_objects as go
 
 
 # Ajoute un cercle a une figure
-def add_circle(point, radius, angle, fig):
+def add_circle(point, radius, normal, fig):
 
-    x_center = point[0]
-    y_center = point[1]
-    z_center = point[2]
+    # Center position
+    x_center, y_center, z_center = point
 
-    theta_x = angle[0]
-    theta_y = angle[1]
-    theta_z = angle[2]
+    # Calculate angles in radians
+    theta_x = math.atan2(normal[1], normal[2])  # Angle around x-axis
+    theta_y = math.atan2(normal[0], normal[2])  # Angle around y-axis
+    theta_z = math.atan2(normal[0], normal[1])  # Angle around z-axis
+
+    # Convert radians to degrees
+    theta_x = math.degrees(theta_x)
+    theta_y = math.degrees(theta_y)
+    theta_z = math.degrees(theta_z)
 
     theta = [i for i in range(0, 361, 20)]
     x_circle = [x_center + radius * np.cos(np.deg2rad(angle)) for angle in theta]
