@@ -10,9 +10,9 @@ def add_circle(point, radius, normal, fig):
     x_center, y_center, z_center = point
 
     # Calculate angles in radians
-    theta_x = math.atan2(normal[1], normal[2])  # Angle around x-axis
-    theta_y = math.atan2(normal[0], normal[2])  # Angle around y-axis
-    theta_z = math.atan2(normal[0], normal[1])  # Angle around z-axis
+    theta_x = math.atan2(normal[1], normal[2])
+    theta_y = math.atan2(normal[0], normal[2])
+    theta_z = math.atan2(normal[0], normal[1])
 
     # Convert radians to degrees
     theta_x = math.degrees(theta_x)
