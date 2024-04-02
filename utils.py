@@ -60,5 +60,13 @@ def add_circle(center, radius, T1, T2, fig, color):
         color=color
     ))
 
-
-
+# Vérifie si un point est dans un triangle
+def point_in_triangle(point, tri, eps):
+    
+    p0 = tri[0]
+    p1 = tri[1]
+    p2 = tri[2]
+    
+    normal = np.cross(p1 - p0, p2 - p0)
+    normal /= np.linalg.norm(normal)
+    return np.abs(np.dot(normal, point - p0)) <= eps
