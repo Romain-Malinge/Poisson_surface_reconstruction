@@ -6,11 +6,15 @@ import plotly.graph_objects as go
 # Créer une nouvelle figure
 def new_fig():
     fig = go.Figure()
+
     fig.update_layout(scene=dict(
         xaxis_title='X',
         yaxis_title='Y',
         zaxis_title='Z'),
         showlegend=False)
+    
+    fig.update_scenes(aspectmode='data')
+
     return fig
 
 
@@ -60,13 +64,20 @@ def add_circle(center, radius, T1, T2, fig, color):
         color=color
     ))
 
-# Vérifie si un point est dans un triangle
-def point_in_triangle(point, tri, eps):
-    
-    p0 = tri[0]
-    p1 = tri[1]
-    p2 = tri[2]
-    
-    normal = np.cross(p1 - p0, p2 - p0)
-    normal /= np.linalg.norm(normal)
-    return np.abs(np.dot(normal, point - p0)) <= eps
+
+# Calcule la distance entre un point et un triangle
+def distance_point_triangle(point, triangle):
+    p0, p1, p2 = triangle
+    bary = (p0 + p1 + p2) / 3
+    dists = []
+    for i in [p0, p1, p2, bary]:
+        dists.append(np.linalg.norm(i - point))
+    return min(dists)
+
+# Calcul la distance entre un point et une surface
+def distance_point_surface(point, vertices, faces):
+    dists = []
+    for face in faces:
+        triangle = vertices[face]
+        dists.append(distance_point_triangle(point, triangle))
+    return min(dists)
