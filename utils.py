@@ -74,6 +74,7 @@ def distance_point_triangle(point, triangle):
         dists.append(np.linalg.norm(i - point))
     return min(dists)
 
+
 # Calcul la distance entre un point et une surface
 def distance_point_surface(point, vertices, faces):
     dists = []
